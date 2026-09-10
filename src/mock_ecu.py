@@ -1,4 +1,4 @@
-from can_handler import create_bus, send_message, receive_message, parse_message
+from src.can_handler import create_bus, send_message, receive_message, parse_message
 
 
 class MockDoorLockECU:
