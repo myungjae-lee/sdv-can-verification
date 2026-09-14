@@ -27,3 +27,22 @@ def test_unlock_command_returns_unlocked_status():
 
     raw_msg = receive_message(test_bus)
     assert raw_msg.data == bytearray([0x01])
+
+def test_consecutive_lock_unlock_final_state():
+    """Sending LOCK then UNLOCK consecutively should result in final state UNLOCKED."""
+    ecu_bus = create_bus()
+    test_bus = create_bus()
+    ecu = MockDoorLockECU(ecu_bus)
+
+    # LOCK
+    send_message(test_bus, 0x300, [0x01])
+    ecu.process_command()
+    receive_message(test_bus)   # Consume LOCK response, not checked here
+
+    # UNLOCK
+    send_message(test_bus, 0x300, [0x02])
+    ecu.process_command()
+    raw_msg = receive_message(test_bus)   # Check the final response
+
+    assert raw_msg.data == bytearray([0x01])   # Final state should be UNLOCKED
+    assert ecu.state == MockDoorLockECU.UNLOCKED  # Double-check internal state directly
