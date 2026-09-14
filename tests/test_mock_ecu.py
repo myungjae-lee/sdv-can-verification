@@ -5,12 +5,25 @@ from src.mock_ecu import MockDoorLockECU
 
 def test_lock_command_returns_locked_status():
     """Sending LOCK_CMD (0x300) should update ECU state and respond with LOCKED (0x301)."""
-    ecu_bus = create_bus()    # Bus used by the ECU (receives commands, sends status)
-    test_bus = create_bus()   # Bus used by the test (sends commands, receives status)
+    ecu_bus = create_bus()
+    test_bus = create_bus()
     ecu = MockDoorLockECU(ecu_bus)
 
-    send_message(test_bus, 0x300, [0x01])   # Send LOCK command
-    ecu.process_command()                    # ECU processes it and responds
+    send_message(test_bus, 0x300, [0x01])
+    ecu.process_command()
 
     raw_msg = receive_message(test_bus)
-    assert raw_msg.data == bytearray([0x00])   # Expect LOCKED response
+    assert raw_msg.data == bytearray([0x00])
+
+
+def test_unlock_command_returns_unlocked_status():
+    """Sending UNLOCK_CMD (0x300) should update ECU state and respond with UNLOCKED (0x301)."""
+    ecu_bus = create_bus()
+    test_bus = create_bus()
+    ecu = MockDoorLockECU(ecu_bus)
+
+    send_message(test_bus, 0x300, [0x02])
+    ecu.process_command()
+
+    raw_msg = receive_message(test_bus)
+    assert raw_msg.data == bytearray([0x01])
