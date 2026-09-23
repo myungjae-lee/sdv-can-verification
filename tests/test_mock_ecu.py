@@ -46,3 +46,33 @@ def test_consecutive_lock_unlock_final_state():
 
     assert raw_msg.data == bytearray([0x01])   # Final state should be UNLOCKED
     assert ecu.state == MockDoorLockECU.UNLOCKED  # Double-check internal state directly
+
+
+def test_undefined_command_produces_no_response():
+    """Sending an undefined command value should not produce any response (fault case)."""
+    ecu_bus = create_bus()
+    test_bus = create_bus()
+    ecu = MockDoorLockECU(ecu_bus)
+
+    send_message(test_bus, 0x300, [0x99])
+    ecu.process_command()
+
+    raw_msg = receive_message(test_bus, timeout=0.1)
+    assert raw_msg is None
+
+
+def test_repeated_lock_command_is_idempotent():
+    """Sending LOCK_CMD twice in a row should keep the state as LOCKED (idempotency)."""
+    ecu_bus = create_bus()
+    test_bus = create_bus()
+    ecu = MockDoorLockECU(ecu_bus)
+
+    send_message(test_bus, 0x300, [0x01])
+    ecu.process_command()
+    raw_msg1 = receive_message(test_bus)   # First response
+    assert raw_msg1.data == bytearray([0x00])
+
+    send_message(test_bus, 0x300, [0x01])
+    ecu.process_command()
+    raw_msg2 = receive_message(test_bus)   # Second response (should be identical)
+    assert raw_msg2.data == bytearray([0x00])
